@@ -1,4 +1,4 @@
-# the-constitutional-court-
+# The Constitutional Court
 Crawler of Czech Republic The Constitutional Court.
 
 Downloads HTML files and produces CSV file with results.
