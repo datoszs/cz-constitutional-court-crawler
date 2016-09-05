@@ -1,6 +1,7 @@
 # the-constitutional-court-
-Crawler of Czech Republic The Constitutional Court
-Downloads HTML files and produces CSV file with results
+Crawler of Czech Republic The Constitutional Court.
+
+Downloads HTML files and produces CSV file with results.
 
 ## Requirements
 * beautifulsoup4==4.4.1
