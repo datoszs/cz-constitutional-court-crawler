@@ -243,6 +243,7 @@ def make_record(soup, id):
             "table > tbody > tr:nth-of-type(11) > td:nth-of-type(2)").text
         item = {
             "registry_mark": mark,
+            "record_id": ecli,
             "decision_date": date,
             "court_name": court,
             "web_path": link,
@@ -266,7 +267,7 @@ def extract_information(records):
     # print(len(html_files))
     if records is None:
         records = len(html_files)
-    fieldnames = ['court_name', 'registry_mark', 'decision_date', 'web_path', 'local_path', 'form_decision',
+    fieldnames = ['court_name', 'record_id', 'registry_mark', 'decision_date', 'web_path', 'local_path', 'form_decision',
                   'decision_result', 'ecli']
 
     global writer_records
@@ -277,7 +278,7 @@ def extract_information(records):
                            newline='', encoding="utf-8")
 
         writer_records = csv.DictWriter(
-            csv_records, fieldnames=fieldnames, delimiter=";")
+            csv_records, fieldnames=fieldnames, delimiter=";",quoting=csv.QUOTE_ALL)
         writer_records.writeheader()
 
         from tqdm import tqdm
@@ -412,7 +413,7 @@ def main():
         if b_screens:
             session.capture_to(
                 join(screens_dir_path, "errors.png"), selector=".searchValidator")
-            records = 0
+        records = 0
         if not session.exists("#ctl00_MainContent_lbError"):
             pages, records = how_many(response, records_per_page)
             # print(pages)
@@ -432,7 +433,7 @@ def main():
                     logger.debug(
                         "Loaded page number is greater than count of pages")
                     page_from = 0
-                if pages != (page_from + 1):  # parametr page is from zero
+                if pages != (page_from + 1):  # parameter page is from zero
                     last_page = page_from
                     while (last_page + 1) != pages:
                         last_page = walk_pages(last_page, pages)
@@ -449,8 +450,7 @@ def main():
         result = extract_information(records)
         if result:
             logger.info("DONE - extraction")
-            with codecs.open(join(out_dir, "current_page.ini"), "w", encoding="utf-8") as f:
-                f.write("0")
+            os.remove(join(out_dir, "current_page.ini"))
 
         return True
 
@@ -475,7 +475,7 @@ if __name__ == "__main__":
     logger.debug(options)
 
     result_dir_path = join(out_dir, "result")
-    out_dir = join(out_dir, working_dir)  # new outdir is working directory
+    out_dir = join(out_dir, working_dir)  # new out_dir is working directory
     documents_dir_path = join(out_dir, documents_dir)
 
     screens_dir_path = create_directories()
@@ -484,15 +484,17 @@ if __name__ == "__main__":
         logger.info("Only extract informations")
         extract_information(records=None)
         logger.info("DONE - extraction")
+        logger.info("Moving files")
+        shutil.move(join(out_dir, output_file), result_dir_path)
+        
     else:
         if main():
             # move results of crawling
             if not os.listdir(result_dir_path):
                 if os.path.exists(join(out_dir, output_file)):
                     logger.info("Moving files")
-                    shutil.copytree(documents_dir_path, join(
-                        result_dir_path, documents_dir))
-                    shutil.copy2(join(out_dir, output_file), result_dir_path)
+                    shutil.move(documents_dir_path, result_dir_path)
+                    shutil.move(join(out_dir, output_file), result_dir_path)
                     if not b_delete:
                         logger.debug("I remove working directory")
                         shutil.rmtree(out_dir)
